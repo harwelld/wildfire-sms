@@ -32,18 +32,30 @@ function mapInitialization(customers) {
     var bounds = new google.maps.LatLngBounds();
 
     $.each(customers, function(i, e) {
+        console.log(e);
         var long = Number(e['longitude']);
         var lat = Number(e['latitude']);
         var latlng = new google.maps.LatLng(lat, long);
 
         bounds.extend(latlng);
 
+        let contentStr = '<h4>User Location</h4><hr>';
+        contentStr += '<p><b>' + 'Username' + ':</b>&nbsp' + e['user_name'] + '</p>';
+        contentStr += '<p><b>' + 'Phone Number' + ':</b>&nbsp' + e['userphone'] + '</p>';
+        contentStr += '<p><b>' + 'Notification Distance' + ':</b>&nbsp' + e['user_distance'] + ' miles</p>';
+
         // Create the marker
-        new google.maps.Marker({ // Set the marker
+        let marker = new google.maps.Marker({ // Set the marker
             position : latlng, // Position marker to coordinates
             map : map, // assign the market to our map variable
-            //customInfo: contentStr,
+            customInfo: contentStr,
             //icon: icons[e['report_type']]
+        });
+
+        // Add a Click Listener to the marker
+        google.maps.event.addListener(marker, 'click', function() {
+            infowindow.setContent(marker['customInfo']);
+            infowindow.open(map, marker);
         });
     });
     map.fitBounds(bounds);
@@ -54,7 +66,6 @@ function getCustomerData(latest=false) {
     $.ajax({
         url: '/mapCustomers',
         success: function(customers) {
-            console.log(customers);
             // Lab 6: Question 4: Bonus - center map over newly submitted report
             // if (latest) {
             //     // Get latest report

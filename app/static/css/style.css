@@ -3,10 +3,6 @@ html,body{
     overflow: hidden;
 }
 
-form {
-    padding-left: 10px;
-}
-
 .col-4 {
     padding-left: 0 !important;
     padding-right: 0 !important;

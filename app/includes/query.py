@@ -16,9 +16,9 @@ def registerNewCustomer(customer):
 
 def getCustomers():
     """Returns all customer data and location as json object"""
-    sql = 'SELECT user_name, user_phone, user_distance, ' \
-          'ST_Y(geom) as longitude, ST_X(geom) as latitude, modified ' \
-          'FROM customer;'
+    sql = """SELECT user_name, '(XXX)XXX-' || RIGHT(user_phone, 4) as userphone, """
+    sql +="""user_distance, ST_Y(geom) as longitude, ST_X(geom) as latitude, modified """
+    sql +="""FROM customer;"""
     customers = executeSQL(sql, None, getDBConnection(), fetchAllFlag=True)
     return customers
 
