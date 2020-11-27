@@ -1,19 +1,16 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from os import getenv
-from dotenv import load_dotenv
-load_dotenv()
-
+from app import app
 
 def getDBConnection():
     """Returns PostgreSQL connection or None if failure to connect"""
     try:
         cnxn = psycopg2.connect(
-            user = getenv('DB_USER'),
-            password = getenv('DB_PASS'),
-            host = getenv('BD_HOST'),
-            port = getenv('DB_PORT'),
-            database = getenv('DB_NAME')
+            user = app.config['DB_USER'],
+            password = app.config['DB_PASS'],
+            host = app.config['DB_HOST'],
+            port = app.config['DB_PORT'],
+            database = app.config['DB_NAME']
         )
         print('PostgreSQL connection established')
         return cnxn

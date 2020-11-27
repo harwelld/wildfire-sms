@@ -1,4 +1,4 @@
-.env
+app_config.py
 
 venv/
 

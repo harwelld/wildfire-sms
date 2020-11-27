@@ -45,4 +45,4 @@ if __name__ == '__main__':
     pass
     # customer = {'username': 'Dyl', 'phone': '845899', 'distance': '5', 'latitude': '46.5966414', 'longitude': '-132.66838'}
     # registerNewCustomer(customer)
-    print(getCustomers())
+    # print(getCustomers())
