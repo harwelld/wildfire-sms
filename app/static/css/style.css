@@ -1,0 +1,39 @@
+html,body{
+    background-color: #f5f5f5;
+    overflow: hidden;
+}
+
+form {
+    padding-left: 10px;
+}
+
+.col-4 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+#map {
+    height:100%;
+    right:0;
+    position: absolute;
+    overflow: hidden;
+}
+
+#map img
+{
+    max-width : none;
+}
+
+html {
+    box-sizing: border-box;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    box-sizing: inherit;
+  }
+  
+.container-map {
+    box-sizing: initial;
+}

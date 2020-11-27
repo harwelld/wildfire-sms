@@ -1,9 +1,28 @@
 from app import app
+from app.includes.query import registerNewCustomer, getCustomers
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 
-@app.route('/')
-def index():
-    return("Everyting Crisp Mon")
+@app.route("/")
+def redirectHome():
+    return redirect(url_for('home'))
 
-@app.route('/about')
-def about():
-    return("<h1 style='color:red'>About</h1>")
+@app.route("/wildfire-sms", methods=['GET', 'POST'])
+def home(showLastCustomer=False):
+    form = ''
+    if request.method == 'POST':
+        # TODO: use wtforms and server-side validation
+        ##if form.validate_on_submit():
+        if form == '':
+            customerRecord = request.form.to_dict()
+            registerNewCustomer(customerRecord)
+            flash('Registration complete', 'success')
+            print(customerRecord)
+            return redirect(url_for('home'), showLastCustomer=True)
+        else:
+            flash('Error registering please try again', 'error')
+    return render_template('index.html', form=form)
+
+
+@app.route("/mapCustomers")
+def mapCustomers():
+    return jsonify(getCustomers())
