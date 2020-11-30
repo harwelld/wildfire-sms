@@ -6,11 +6,11 @@ def getDBConnection():
     """Returns PostgreSQL connection or None if failure to connect"""
     try:
         cnxn = psycopg2.connect(
+            dbname = app.config['DB_NAME'],
             user = app.config['DB_USER'],
             password = app.config['DB_PASS'],
             host = app.config['DB_HOST'],
-            port = app.config['DB_PORT'],
-            database = app.config['DB_NAME']
+            port = app.config['DB_PORT']
         )
         print('PostgreSQL connection established')
         return cnxn
@@ -32,12 +32,6 @@ def executeSQL(sql, params, connection, fetchAllFlag=False, fetchOneFlag=False):
     except (Exception, psycopg2.Error) as e:
         print (f"PostgreSQL error: {str(e)}")
         return None
-    finally:
-        if (connection):
-            connection.close()
-        if (cursor):
-            cursor.close() 
-        print("PostgreSQL connection closed")
 
 
 if __name__ == '__main__':
