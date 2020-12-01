@@ -26,8 +26,16 @@ function mapInitialization(customers) {
         streetViewControl: false
     });
 
+    // Load latest InciWeb data direct from RSS feed
     var inciWebData = new google.maps.KmlLayer({ url: 'https://inciweb.nwcg.gov/feeds/maps/' });
     inciWebData.setMap(map);
+
+    // This fails because of CORS - InciWeb must have this disabled
+    // map.data.loadGeoJson('https://inciweb.nwcg.gov/feeds/json/esri/');
+    // map.data.setStyle({
+    //     url: 'img/error.svg',
+    //     scaledSize: new google.maps.Size(40, 40)
+    // });
 
     var bounds = new google.maps.LatLngBounds();
 
@@ -62,20 +70,10 @@ function mapInitialization(customers) {
 }
 
 
-function getCustomerData(latest=false) {
+function getCustomerData() {
     $.ajax({
         url: '/mapCustomers',
         success: function(customers) {
-            // Lab 6: Question 4: Bonus - center map over newly submitted report
-            // if (latest) {
-            //     // Get latest report
-            //     let lastReport = reports.reduce(function (prev, curr) {
-            //         return (prev.time_stamp > curr.time_stamp) ? prev : curr
-            //     });
-            //     reports = [];
-            //     reports.push(lastReport);
-            //     console.log(reports);
-            // }
             mapInitialization(customers);
         },
         error: function(status, error) {
