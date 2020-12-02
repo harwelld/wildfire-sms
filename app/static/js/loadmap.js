@@ -30,7 +30,7 @@ function mapInitialization(customers) {
     var inciWebData = new google.maps.KmlLayer({ url: 'https://inciweb.nwcg.gov/feeds/maps/' });
     inciWebData.setMap(map);
 
-    // This fails because of CORS - InciWeb must have this disabled
+    // This fails because of CORS
     // map.data.loadGeoJson('https://inciweb.nwcg.gov/feeds/json/esri/');
     // map.data.setStyle({
     //     url: 'img/error.svg',
@@ -57,7 +57,7 @@ function mapInitialization(customers) {
             position : latlng, // Position marker to coordinates
             map : map, // assign the market to our map variable
             customInfo: contentStr,
-            //icon: icons[e['report_type']]
+            icon: 'img/error.svg'
         });
 
         // Add a Click Listener to the marker
@@ -66,13 +66,15 @@ function mapInitialization(customers) {
             infowindow.open(map, marker);
         });
     });
+
     map.fitBounds(bounds);
 }
 
 
+// Hit mapCustomer endpoint to retrieve customer data
 function getCustomerData() {
     $.ajax({
-        url: '/mapCustomers',
+        url: '/getCustomers',
         success: function(customers) {
             mapInitialization(customers);
         },
@@ -85,8 +87,9 @@ function getCustomerData() {
 
 // Center map from autocomplete address field selection
 function initAutocomplete() {
-    const autocomplete = new google.maps.places.Autocomplete(document
-        .getElementById('autocomplete'));
+    const autocomplete = new google.maps.places.Autocomplete(
+        document.getElementById('autocomplete')
+    );
 
     autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
@@ -103,12 +106,12 @@ function initAutocomplete() {
             map.setCenter(place.geometry.location);
             map.setZoom(17);
         }
-
         // Pass lat/lon values to hidden fields
         $('#latitude').val(place.geometry.location.lat());
         $('#longitude').val(place.geometry.location.lng());
     });
 }
 
-//Execute our 'initialization' function once the page has loaded.
+
+// Initialize when page loads
 google.maps.event.addDomListener(window, 'load', initialization);

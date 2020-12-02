@@ -7,8 +7,8 @@ from app import app
 def getDBConnection(useDotEnvFlag=False):
     """Returns PostgreSQL connection or None if failure to connect"""
     try:
-        if useDotEnvFlag:
-            load_dotenv(find_dotenv())
+        # if useDotEnvFlag:
+        #     load_dotenv(find_dotenv())
         cnxn = psycopg2.connect(
             dbname = getenv('DB_NAME') if useDotEnvFlag else app.config['DB_NAME'],
             user = getenv('DB_USER') if useDotEnvFlag else app.config['DB_USER'],

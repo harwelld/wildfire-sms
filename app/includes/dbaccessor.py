@@ -1,5 +1,5 @@
 import json
-from app.includes.databaseUtility import getDBConnection, executeSQL
+from app.includes.dbutil import getDBConnection, executeSQL
 
 
 def registerNewCustomer(customer):
@@ -51,6 +51,7 @@ def getIncidentIds(useDotEnvFlag=False):
 
 
 def getDistanceBetweenPoints(lng1, lat1, lng2, lat2, useDotEnvFlag=False):
+    """Returns distance (meters) between two coordinates in WGS84 geographic spatial reference"""
     sql = 'SELECT public.getdistancebetweenpoints(%s, %s, %s, %s);'
     params = (lng1, lat1, lng2, lat2)
     distance = executeSQL(sql, params, getDBConnection(useDotEnvFlag), fetchAllFlag=True)

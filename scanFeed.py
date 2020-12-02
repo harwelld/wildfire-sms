@@ -1,8 +1,16 @@
 import json
 import sys
 import requests
-from app.includes.databaseAccessor import getIncidentIds, insertIncident, getDistanceBetweenPoints
+from os import getenv
+from twilio.rest import Client
+from dotenv import load_dotenv
+from app.includes.dbaccessor import getIncidentIds, insertIncident, getDistanceBetweenPoints
 
+load_dotenv()
+
+account_sid = getenv('TWILIO_ACCOUNT_SID')
+auth_token = getenv('TWILIO_AUTH_TOKEN')
+client = Client(account_sid, auth_token)
 
 # Get a list of all incident ids currently in database
 idsFromDB = []
@@ -41,3 +49,13 @@ for row in distance:
     distanceMeters = row['getdistancebetweenpoints']
     distanceMiles = float(distanceMeters) * 0.00062
 print(distanceMiles)
+
+message = client.messages \
+    .create(
+         body=f"This is a test from Dylan's wildfire-sms-notification-service! The {incident1['name']} incident is {distanceMiles:.2f} miles from your location. " \
+              f"For more information about this incident, please visit https://inciweb.nwcg.gov{incident1['url']}",
+         from_=getenv('TWILIO_PHONE_NUMBER'),
+         to='+15056900343'
+     )
+
+print(message.sid)
