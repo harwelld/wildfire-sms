@@ -7,12 +7,10 @@ from app.includes.dbutil import getDBConnection, executeSQL
 ###############################################################################
 
 def distanceBetweenPointsInMiles(lng1, lat1, lng2, lat2, useDotEnvFlag=False):
-    """Returns distance (meters) between two coordinates in WGS84 geographic spatial reference"""
+    """Returns distance in miles between two coordinates in WGS84 geographic spatial reference"""
     sql = 'SELECT public.getdistancebetweenpoints(%s, %s, %s, %s);'
     params = (lng1, lat1, lng2, lat2)
     distanceResult = executeSQL(sql, params, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
-    #distanceMeters = distanceResult[0]['getdistancebetweenpoints']
-    #distanceMiles = float(distanceMeters) * 0.00062
     for row in distanceResult:
         distanceMeters = row['getdistancebetweenpoints']
         distanceMiles = float(distanceMeters) * 0.00062
@@ -23,7 +21,7 @@ def distanceBetweenPointsInMiles(lng1, lat1, lng2, lat2, useDotEnvFlag=False):
 # Customer Table Operations
 ###############################################################################
 
-def getAllCustomers(hidePhoneNumber=True):
+def getAllCustomers(hidePhoneNumber=True, useDotEnvFlag=False):
     """Returns all customer data and locations from customer table"""
     if hidePhoneNumber:   
         sql = """SELECT user_id, user_name, '(XXX)XXX-' || RIGHT(user_phone, 4) as userphone, """
@@ -33,7 +31,7 @@ def getAllCustomers(hidePhoneNumber=True):
         sql = """SELECT user_id, user_name, user_phone, """
         sql +="""user_distance, ST_Y(geom) as latitude, ST_X(geom) as longitude, modified """
         sql +="""FROM customer;"""
-    customers = executeSQL(sql, None, getDBConnection(), fetchAllFlag=True)
+    customers = executeSQL(sql, None, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
     return customers
 
 

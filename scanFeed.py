@@ -18,6 +18,7 @@ logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
 logName = 'scanFeed.log'
 logFile = path.join(logsDir, logName)
 logMessage = f"Scanning feed: {getTime()}"
+logger(logFile, logMessage)
 
 def main():
     """
@@ -34,12 +35,12 @@ def main():
     newIncidents = findNewIncidents(incidentsFromFeed, getIncidentsIdsFromDB())
 
     if newIncidents:
-        logMessage = f"{len(newIncidents)} new incident(s) found!"
+        logMessage = f"{len(newIncidents)} new incident(s) found"
         logger(logFile, logMessage)
         print(logMessage)
 
         # Retrieve all customer data with phone numbers
-        customers = getAllCustomers(hidePhoneNumber=False)
+        customers = getAllCustomers(hidePhoneNumber=False, useDotEnvFlag=True)
         
         # Insert new incidents into database
         insertResult = addNewIncidents(newIncidents)
@@ -69,30 +70,35 @@ def main():
 
                     # Notify user of incident with sms
                     cust_phone = customer['user_phone']
-                    notifyResult = notifyCustomer(incident, distanceMiles, cust_phone)
-                    if notifyResult['msg_sid'] > 0:
-                        logMessage = f"Notification sent to user: {customer['user_name']}"
+                    smsResult = notifyCustomer(incident, distanceMiles, cust_phone)
+
+                    if smsResult['error']:
+                        logMessage = f"An error occured sending notification to user: {customer['user_name']}, incident id: {incident['id']}"
                         logger(logFile, logMessage)
                         print(logMessage)
+                        print(smsResult['exception'])
+
                     else:
-                        logMessage = f"An error occured with notification to user: {customer['user_name']}"
+                        logMessage = f"Notification sent to user: {customer['user_name']}, message sid: {smsResult['msg_sid']}"
                         logger(logFile, logMessage)
                         print(logMessage)
-                        print(notifyResult['status']) ##This contains the exception
-                    
-                    # Caputure sms history and insert into database
-                    smsHistory = {}
-                    smsHistory['feed_id'] = inc['id']
-                    smsHistory['cust_id'] = customer['user_id']
-                    smsHistory['distance'] = distanceMiles
-                    smsHistory['msg_sid'] = notifyResult['msg_sid']
-                    try:
-                        insertSmsHistoryRecord(smsHistory, useDotEnvFlag=True)
-                    except Exception as e:
-                        logMessage = f"Failed to insert sms history record: {str(e)}"
-                        logger(logFile, logMessage)
-                        print(logMessage)
-                        continue
+
+                        # Caputure sms history and insert into database
+                        smsHistory = {}
+                        smsHistory['feed_id'] = incident['id']
+                        smsHistory['cust_id'] = customer['user_id']
+                        smsHistory['distance'] = distanceMiles
+                        smsHistory['msg_sid'] = smsResult['msg_sid']
+                        try:
+                            insertSmsHistoryRecord(smsHistory, useDotEnvFlag=True)
+                            logMessage = 'Sms history record inserted'
+                            logger(logFile, logMessage)
+                            print(logMessage)
+                        except Exception as e:
+                            logMessage = f"Failed to insert sms history record: {str(e)}"
+                            logger(logFile, logMessage)
+                            print(logMessage)
+                            continue
 
         # Check for any new incidents that failed to be inserted into database          
         failed = insertResult[1]
@@ -102,12 +108,12 @@ def main():
                 logger(logFile, logMessage)
                 print(logMessage)
 
-        logMessage = 'Finished processing new incidents'
+        logMessage = 'Finished processing new incidents\n'
         logger(logFile, logMessage)
         print(logMessage)
 
     else:
-        logMessage = 'No new incidents found'
+        logMessage = 'No new incidents found\n'
         logger(logFile, logMessage)
         print(logMessage)
 
@@ -151,7 +157,7 @@ def addNewIncidents(newIncidents):
 
 
 def notifyCustomer(incident, distance, customerPhone):
-    smsResult = {}
+    smsResult = {'error': None, 'exception': None}
     try:
         message = client.messages \
             .create(
@@ -163,8 +169,8 @@ def notifyCustomer(incident, distance, customerPhone):
         smsResult['msg_sid'] = message.sid
         smsResult['status'] = message.status
     except Exception as e:
-        smsResult['msg_sid'] = -1
-        smsResult['status'] = str(e)
+        smsResult['error'] = -1
+        smsResult['exception'] = str(e)
     return smsResult
 
 
