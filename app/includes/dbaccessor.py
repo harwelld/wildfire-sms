@@ -2,6 +2,41 @@ import json
 from app.includes.dbutil import getDBConnection, executeSQL
 
 
+###############################################################################
+# Distance Calculation
+###############################################################################
+
+def distanceBetweenPointsInMiles(lng1, lat1, lng2, lat2, useDotEnvFlag=False):
+    """Returns distance (meters) between two coordinates in WGS84 geographic spatial reference"""
+    sql = 'SELECT public.getdistancebetweenpoints(%s, %s, %s, %s);'
+    params = (lng1, lat1, lng2, lat2)
+    distanceResult = executeSQL(sql, params, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
+    #distanceMeters = distanceResult[0]['getdistancebetweenpoints']
+    #distanceMiles = float(distanceMeters) * 0.00062
+    for row in distanceResult:
+        distanceMeters = row['getdistancebetweenpoints']
+        distanceMiles = float(distanceMeters) * 0.00062
+    return round(distanceMiles, 1)
+
+
+###############################################################################
+# Customer Table Operations
+###############################################################################
+
+def getAllCustomers(hidePhoneNumber=True):
+    """Returns all customer data and locations from customer table"""
+    if hidePhoneNumber:   
+        sql = """SELECT user_id, user_name, '(XXX)XXX-' || RIGHT(user_phone, 4) as userphone, """
+        sql +="""user_distance, ST_Y(geom) as latitude, ST_X(geom) as longitude, modified """
+        sql +="""FROM customer;"""
+    else:
+        sql = """SELECT user_id, user_name, user_phone, """
+        sql +="""user_distance, ST_Y(geom) as latitude, ST_X(geom) as longitude, modified """
+        sql +="""FROM customer;"""
+    customers = executeSQL(sql, None, getDBConnection(), fetchAllFlag=True)
+    return customers
+
+
 def registerNewCustomer(customer):
     """Inserts a new customer in the customer table"""
     sql = 'CALL public.registernewcustomer(%s, %s, %s, %s, %s);'
@@ -15,16 +50,18 @@ def registerNewCustomer(customer):
     executeSQL(sql, params, getDBConnection())
 
 
-def getCustomers():
-    """Returns all customer data and locations from customer table"""
-    sql = """SELECT user_name, '(XXX)XXX-' || RIGHT(user_phone, 4) as userphone, """
-    sql +="""user_distance, ST_Y(geom) as longitude, ST_X(geom) as latitude, modified """
-    sql +="""FROM customer;"""
-    customers = executeSQL(sql, None, getDBConnection(), fetchAllFlag=True)
-    return customers
+###############################################################################
+# Inciweb Table Operations
+###############################################################################
+
+def getAllIncidentIds(useDotEnvFlag=False):
+    """Returns all incident ids from inciweb table"""
+    sql = 'SELECT feed_id FROM inciweb;'
+    incidents = executeSQL(sql, None, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
+    return incidents
 
 
-def insertIncident(incident, useDotEnvFlag=False):
+def insertIncidentRecord(incident, useDotEnvFlag=False):
     """Inserts a new incident record into inciweb table"""
     sql = 'CALL public.insertnewincident(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
     params = (
@@ -41,22 +78,32 @@ def insertIncident(incident, useDotEnvFlag=False):
         str(incident['contained'])
     )
     executeSQL(sql, params, getDBConnection(useDotEnvFlag))
-    
-
-def getIncidentIds(useDotEnvFlag=False):
-    """Returns all incident ids from inciweb table"""
-    sql = 'SELECT feed_id FROM inciweb;'
-    incidents = executeSQL(sql, None, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
-    return incidents
 
 
-def getDistanceBetweenPoints(lng1, lat1, lng2, lat2, useDotEnvFlag=False):
-    """Returns distance (meters) between two coordinates in WGS84 geographic spatial reference"""
-    sql = 'SELECT public.getdistancebetweenpoints(%s, %s, %s, %s);'
-    params = (lng1, lat1, lng2, lat2)
-    distance = executeSQL(sql, params, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
-    return distance
+###############################################################################
+# Sms History Table Operations
+###############################################################################
+
+def getAllSmsHistory(useDotEnvFlag=False):
+    """Returns all sms history records"""
+    sql = 'SELECT inc_id, cust_id, distance, msg_sid, modified FROM sms_history;'
+    sms_history = executeSQL(sql, None, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
+    return sms_history
 
 
+def insertSmsHistoryRecord(history, useDotEnvFlag=False):
+    """Inserts a new history record into sms_history table"""
+    sql = 'CALL public.insertnewhistory(%s, %s, %s, %s);'
+    params = (
+        int(history['feed_id']),
+        int(history['cust_id']),
+        float(history['distance']),
+        str(history['msg_sid'])
+    )
+    executeSQL(sql, params, getDBConnection(useDotEnvFlag))
+
+
+
+###############################################################################
 if __name__ == '__main__':
     pass

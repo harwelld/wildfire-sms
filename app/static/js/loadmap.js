@@ -56,8 +56,8 @@ function mapInitialization(customers) {
         let marker = new google.maps.Marker({ // Set the marker
             position : latlng, // Position marker to coordinates
             map : map, // assign the market to our map variable
-            customInfo: contentStr,
-            icon: 'img/error.svg'
+            customInfo: contentStr
+            //icon: 'img/map_marker.png'
         });
 
         // Add a Click Listener to the marker

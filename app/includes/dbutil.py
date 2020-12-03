@@ -4,6 +4,7 @@ from os import getenv
 from dotenv import find_dotenv, load_dotenv
 from app import app
 
+
 def getDBConnection(useDotEnvFlag=False):
     """Returns PostgreSQL connection or None if failure to connect"""
     try:
@@ -22,7 +23,8 @@ def getDBConnection(useDotEnvFlag=False):
         print(f"Error connecting to PostgreSQL:  {str(e)}")
         return None
 
-def executeSQL(sql, params, connection, fetchAllFlag=False, fetchOneFlag=False):
+
+def executeSQL(sql, params, connection, fetchAllFlag=False):
     """Executes paramaterized SQL with optional flags for return records"""
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -30,8 +32,6 @@ def executeSQL(sql, params, connection, fetchAllFlag=False, fetchOneFlag=False):
         connection.commit()
         if fetchAllFlag:
             return cursor.fetchall()
-        if fetchOneFlag:
-            return cursor.fetchone()
     except (Exception, psycopg2.Error) as e:
         print (f"PostgreSQL error: {str(e)}")
         return None

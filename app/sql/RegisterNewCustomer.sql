@@ -6,8 +6,8 @@ CREATE OR REPLACE PROCEDURE public.registernewcustomer(
 	_username text,
 	_phone text,
 	_distance integer,
-	_lat numeric,
-	_lon numeric)
+	_lon numeric,
+	_lat numeric)
 LANGUAGE 'sql'
 AS $BODY$
 INSERT INTO customer(user_name, user_phone, user_distance, geom)

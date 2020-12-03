@@ -1,6 +1,6 @@
 import json
 from app import app
-from app.includes.dbaccessor import registerNewCustomer, getCustomers, getIncidentIds, insertIncident
+from app.includes.dbaccessor import *
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 
 
@@ -28,9 +28,14 @@ def home(post=0):
 
 @app.route("/getCustomers")
 def getCustomers():
-    return jsonify(getCustomers())
+    return jsonify(getAllCustomers())
 
 
 @app.route("/getIncidents")
 def getIncidents():
-    return jsonify(getIncidentIds())
+    return jsonify(getAllIncidentIds())
+
+
+@app.route("/getSmsHistory")
+def getSmsHistory():
+    return jsonify(getAllSmsHistory())

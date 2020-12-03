@@ -4,58 +4,131 @@ import requests
 from os import getenv
 from twilio.rest import Client
 from dotenv import load_dotenv
-from app.includes.dbaccessor import getIncidentIds, insertIncident, getDistanceBetweenPoints
+from app.includes.dbaccessor import *
 
 load_dotenv()
-
 account_sid = getenv('TWILIO_ACCOUNT_SID')
 auth_token = getenv('TWILIO_AUTH_TOKEN')
 client = Client(account_sid, auth_token)
 
-# Get a list of all incident ids currently in database
-idsFromDB = []
-for row in getIncidentIds(useDotEnvFlag=True):
-    row = json.loads(json.dumps(row))
-    for r in row:
-        if row[r] not in idsFromDB:
-            idsFromDB.append(row[r])
-
-
-# Get a list of all incidents from InciWeb feed
 url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
 incidentsFromFeed = requests.get(url).json()['markers']
-newIncidents = []
-for row in requests.get(url).json()['markers']:
-    if row['id'] not in idsFromDB:
-        newIncidents.append(row)
+
+def main():
+    """
+    Scans the InciWeb data feed to identify new incidents and insert them
+    into the database. For each new incident, determines if the incident is
+    within any customer's notification range. If an incident is within a
+    customer's notification range, the Twilio API will send them a notification.
+    For the prototype phase of the application, this script is designed to be
+    run as a scheduled task (every 15 minutes?).
+
+    TODO: Include in the Flask server, run on timer in a non-blocking way
+    """
+    customers = getAllCustomers(hidePhoneNumber=False)
+    newIncidents = findNewIncidents(incidentsFromFeed, getIncidentsIdsFromDB())
+    print(newIncidents)
+
+    if newIncidents:
+        print(f"{len(newIncidents)} new incident(s) found")
+        insertResult = addNewIncidents(newIncidents)
+        added = insertResult[0]
+        for inc in added:
+            sms_history = {}
+            inc_lat = inc['lat']
+            inc_lng = inc['lng']
+            # Loop customers and calculate distances
+            for customer in customers:
+                cust_lat = str(customer['latitude'])
+                cust_lng = str(customer['longitude'])
+                cust_dist = customer['user_distance']
+                distanceMiles = distanceBetweenPointsInMiles(inc_lng, inc_lat, cust_lng, cust_lat, useDotEnvFlag=True)
+                if customer['user_name'] == 'testuser':
+                    print(f"Lat: {cust_lat}")
+                    print(f"Lng: {cust_lng}")
+                    print(f"Lat: {inc_lat}")
+                    print(f"Lng: {inc_lng}")
+                print(f"{customer['user_name']} {distanceMiles}")
+                if distanceMiles <= cust_dist:
+                    smsHistory = {}
+                    cust_phone = customer['user_phone']
+                    print(f"{inc['name']} is {distanceMiles} miles from user {customer['user_name']}")
+                    # Notify user of incident with sms
+                    notifyResult = notifyCustomer(inc, distanceMiles, cust_phone)
+                    smsHistory['feed_id'] = inc['id']
+                    smsHistory['cust_id'] = customer['user_id']
+                    smsHistory['distance'] = distanceMiles
+                    smsHistory['msg_sid'] = notifyResult['msg_sid']
+                    try:
+                        insertSmsHistoryRecord(smsHistory, useDotEnvFlag=True)
+                    except Exception as e:
+                        print(f"Failed to insert sms history record: {str(e)}")
+                        continue
+
+        failed = insertResult[1]
+    else:
+        print('No new incidents found')
 
 
-# Insert new incidents into database
-if newIncidents:
-    print(f"{len(newIncidents)} new incident(s) found")
+###############################################################################
+# Feed Scanner Helper Functions
+###############################################################################
+
+def getIncidentsIdsFromDB():
+    """Get a list of all incident ids currenty in database"""
+    idsFromDB = []
+    for row in getAllIncidentIds(useDotEnvFlag=True):
+        row = json.loads(json.dumps(row))
+        for r in row:
+            if row[r] not in idsFromDB:
+                idsFromDB.append(row[r])
+    return idsFromDB
+
+
+def findNewIncidents(incidentsFromFeed, idsFromDB):
+    """Check for new incidents in feed that are not in database"""
+    newIncidents = []
+    for row in incidentsFromFeed:
+        if row['id'] not in idsFromDB:
+            newIncidents.append(row)
+    return newIncidents
+
+
+def addNewIncidents(newIncidents):
+    """Insert new incidents into database"""
+    added = []
+    failed = []
     for incident in newIncidents:
         try:
-            insertIncident(incident, useDotEnvFlag=True)
+            insertIncidentRecord(incident, useDotEnvFlag=True)
+            added.append(incident)
             print(f"Incident {incident['id']} added to database")
         except Exception as e:
+            failed.append()
             print(f"Failed to insert incident {incident['id']}: {str(e)}")
-else:
-    print('No new incidents')
+            continue
+    return (added, failed)
 
-incident1 = incidentsFromFeed[0]
-incident2 = incidentsFromFeed[1]
-distance = getDistanceBetweenPoints(incident1['lng'], incident1['lat'], incident2['lng'], incident2['lat'], useDotEnvFlag=True)
-for row in distance:
-    distanceMeters = row['getdistancebetweenpoints']
-    distanceMiles = float(distanceMeters) * 0.00062
-print(distanceMiles)
 
-message = client.messages \
-    .create(
-         body=f"This is a test from Dylan's wildfire-sms-notification-service! The {incident1['name']} incident is {distanceMiles:.2f} miles from your location. " \
-              f"For more information about this incident, please visit https://inciweb.nwcg.gov{incident1['url']}",
-         from_=getenv('TWILIO_PHONE_NUMBER'),
-         to='+15056900343'
-     )
+def notifyCustomer(incident, distance, customerPhone):
+    smsResult = {}
+    try:
+        message = client.messages \
+            .create(
+                body=f"Wildfire-sms: {incident['name']} approximately {distance} miles from your location. " \
+                     f"For more information, please visit https://inciweb.nwcg.gov{incident['url']}",
+                from_=getenv('TWILIO_PHONE_NUMBER'),
+                to=f"+1{customerPhone}"
+            )
+        smsResult['msg_sid'] = message.sid
+        smsResult['status'] = message.status
+    except Exception as e:
+        print(f"Twilio error: {str(e)}")
+        smsResult['msg_sid'] = -1
+        smsResult['status'] = 'A Twilio error occured'
+    return smsResult
 
-print(message.sid)
+
+###############################################################################
+if __name__ == '__main__':
+    main()
