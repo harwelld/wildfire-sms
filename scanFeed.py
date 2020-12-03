@@ -1,7 +1,6 @@
 import json
-import sys
 import requests
-from os import getenv
+from os import getenv, path
 from twilio.rest import Client
 from dotenv import load_dotenv
 from app.includes.dbaccessor import *
@@ -14,6 +13,11 @@ client = Client(account_sid, auth_token)
 url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
 incidentsFromFeed = requests.get(url).json()['markers']
 
+logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
+logName = 'scanFeed.log'
+logFile = path.join(logsDir, logName)
+logMessage = f"Scanning feed: {getTime()}"
+
 def main():
     """
     Scans the InciWeb data feed to identify new incidents and insert them
@@ -25,36 +29,58 @@ def main():
 
     TODO: Include in the Flask server, run on timer in a non-blocking way
     """
-    customers = getAllCustomers(hidePhoneNumber=False)
+    # Compare data in feed to incidents in databse and identify new incidents
     newIncidents = findNewIncidents(incidentsFromFeed, getIncidentsIdsFromDB())
-    print(newIncidents)
 
     if newIncidents:
-        print(f"{len(newIncidents)} new incident(s) found")
+        logMessage = f"{len(newIncidents)} new incident(s) found!"
+        logger(logFile, logMessage)
+        print(logMessage)
+
+        # Retrieve all customer data with phone numbers
+        customers = getAllCustomers(hidePhoneNumber=False)
+        
+        # Insert new incidents into database
         insertResult = addNewIncidents(newIncidents)
         added = insertResult[0]
-        for inc in added:
-            sms_history = {}
-            inc_lat = inc['lat']
-            inc_lng = inc['lng']
-            # Loop customers and calculate distances
+
+        # Parse inserted incidents
+        for incident in added:
+            logMessage = f"Inserted incident {incident['id']} into database"
+            logger(logFile, logMessage)
+            print(logMessage)
+
+            incLat = incident['lat']
+            incLng = incident['lng']
+
+            # Parse customers and calculate distance from new incident
             for customer in customers:
-                cust_lat = str(customer['latitude'])
-                cust_lng = str(customer['longitude'])
-                cust_dist = customer['user_distance']
-                distanceMiles = distanceBetweenPointsInMiles(inc_lng, inc_lat, cust_lng, cust_lat, useDotEnvFlag=True)
-                if customer['user_name'] == 'testuser':
-                    print(f"Lat: {cust_lat}")
-                    print(f"Lng: {cust_lng}")
-                    print(f"Lat: {inc_lat}")
-                    print(f"Lng: {inc_lng}")
-                print(f"{customer['user_name']} {distanceMiles}")
-                if distanceMiles <= cust_dist:
-                    smsHistory = {}
-                    cust_phone = customer['user_phone']
-                    print(f"{inc['name']} is {distanceMiles} miles from user {customer['user_name']}")
+                custLat = str(customer['latitude'])
+                custLng = str(customer['longitude'])
+                custDist = customer['user_distance']
+                distanceMiles = distanceBetweenPointsInMiles(incLng, incLat, custLng, custLat, useDotEnvFlag=True)
+
+                # Check if incident is within customer's notification distance
+                if distanceMiles <= custDist:
+                    logMessage = f"{customer['user_name']} is {str(distanceMiles)} miles from incident {incident['id']}"
+                    logger(logFile, logMessage)
+                    print(logMessage)
+
                     # Notify user of incident with sms
-                    notifyResult = notifyCustomer(inc, distanceMiles, cust_phone)
+                    cust_phone = customer['user_phone']
+                    notifyResult = notifyCustomer(incident, distanceMiles, cust_phone)
+                    if notifyResult['msg_sid'] > 0:
+                        logMessage = f"Notification sent to user: {customer['user_name']}"
+                        logger(logFile, logMessage)
+                        print(logMessage)
+                    else:
+                        logMessage = f"An error occured with notification to user: {customer['user_name']}"
+                        logger(logFile, logMessage)
+                        print(logMessage)
+                        print(notifyResult['status']) ##This contains the exception
+                    
+                    # Caputure sms history and insert into database
+                    smsHistory = {}
                     smsHistory['feed_id'] = inc['id']
                     smsHistory['cust_id'] = customer['user_id']
                     smsHistory['distance'] = distanceMiles
@@ -62,12 +88,27 @@ def main():
                     try:
                         insertSmsHistoryRecord(smsHistory, useDotEnvFlag=True)
                     except Exception as e:
-                        print(f"Failed to insert sms history record: {str(e)}")
+                        logMessage = f"Failed to insert sms history record: {str(e)}"
+                        logger(logFile, logMessage)
+                        print(logMessage)
                         continue
 
+        # Check for any new incidents that failed to be inserted into database          
         failed = insertResult[1]
+        if failed:
+            for incident in failed:
+                logMessage = f"Failed to insert new incident {incident['id']} into database"
+                logger(logFile, logMessage)
+                print(logMessage)
+
+        logMessage = 'Finished processing new incidents'
+        logger(logFile, logMessage)
+        print(logMessage)
+
     else:
-        print('No new incidents found')
+        logMessage = 'No new incidents found'
+        logger(logFile, logMessage)
+        print(logMessage)
 
 
 ###############################################################################
@@ -102,10 +143,8 @@ def addNewIncidents(newIncidents):
         try:
             insertIncidentRecord(incident, useDotEnvFlag=True)
             added.append(incident)
-            print(f"Incident {incident['id']} added to database")
-        except Exception as e:
+        except:
             failed.append()
-            print(f"Failed to insert incident {incident['id']}: {str(e)}")
             continue
     return (added, failed)
 
@@ -123,10 +162,21 @@ def notifyCustomer(incident, distance, customerPhone):
         smsResult['msg_sid'] = message.sid
         smsResult['status'] = message.status
     except Exception as e:
-        print(f"Twilio error: {str(e)}")
         smsResult['msg_sid'] = -1
-        smsResult['status'] = 'A Twilio error occured'
+        smsResult['status'] = str(e)
     return smsResult
+
+
+def getTime():
+    """Fetches current date and time for logging"""
+    date_time = time.strftime('%Y%m%d') + '_' + time.strftime('%H%M%S')
+    return date_time
+
+
+def logger(log_path, log_message):
+    """Opens and appends a message to a specified log file"""
+    with open(log_path, 'a') as log:
+        log.write(log_message + '\n')
 
 
 ###############################################################################
