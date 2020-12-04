@@ -31,35 +31,31 @@
             <span class="navbar-brand mb-0 h1">Wildfire SMS Notification System</span>
         </nav>
         <!-- Sign Up Form -->
-        <form id="signup_form" action="" method="POST">
-            <div class="form-group m-2 mb-3">
-                <label for="username">Username:&nbsp</label>
-                <input class="form-control" id="username" aria-describedby="usernameHelp" placeholder="User_123" name="username">
-                <small id="usernameHelp" class="form-text text-muted">Please enter a unique username.</small>
+        <form id="signup_form" method="POST" action="{{ url_for('home') }}">
+            <div class="form-group mx-4 my-3">
+                {{ form.csrf_token }}
+                {{ form.username.label }}
+                {{ form.username(class_="form-control") }}
             </div>
-            <div class="form-group m-2 mb-3">
-                <label for="phone">Phone Number:&nbsp</label>
-                <input class="form-control" id="phone" aria-describedby="phoneHelp" placeholder="1112223344" name="phone">
-                <small id="phoneHelp" class="form-text text-muted">Please enter a valid mobile phone number.</small>
+            <div class="form-group mx-4 my-3">
+                {{ form.phone.label }}
+                {{ form.phone(class_="form-control phoneNumber") }}
             </div>
-            <div class="form-group m-2 mb-3">
-                <label for="distance">Distance:</label>
-                <select class="form-control" id="distance" aria-describedby="distanceHelp" name="distance">
-                    <option value="5" selected>5 miles</option>
-                    <option value="10">10 miles</option>
-                    <option value="15">15 miles</option>
-                </select>
-                <small id="distanceHelp" class="form-text text-muted">Choose a notification distance (miles)</small>
+            <div class="form-group mx-4 my-3">
+                {{ form.distance.label }}
+                {{ form.distance(class_="form-control") }}
             </div>
-            <div class="form-group m-2 mb-3">
-                <label for="address">Address:</label>
+            <div class="form-group mx-4 my-3">
+                {{ form.autocomplete.label }}
+                {{ form.autocomplete(class_="form-control") }}
+                <!-- <label for="address">Address:</label>
                 <input class="form-control" id="autocomplete" aria-describedby="addressHelp" placeholder="Address">
-                <small id="addressHelp" class="form-text text-muted">Enter an address (does not need to be an exact home address)</small>
+                <small id="addressHelp" class="form-text text-muted">Enter an address (does not need to be an exact home address)</small> -->
                 <input type="hidden" id="latitude" name="latitude" >
                 <input type="hidden" id="longitude" name="longitude" >
             </div>
-            <div class="form-group m-2">
-                <button type="submit" class="btn btn-primary">Register</button>
+            <div class="form-group text-center m-2">
+                {{ form.submit(class_="btn btn-primary") }}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -68,7 +64,6 @@
                     {% endif %}
                 {% endwith %}
             </div>
-            <input type="hidden" id="formPost" name="formPost" value="1" >
         </form>
     </div>
     <!-- Map Container -->
@@ -81,6 +76,6 @@
 
 <!-- Load custom JS -->
 <script src="{{ url_for('static', filename='js/loadmap.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/phonenumber.js') }}"></script>
 </body>
 </html>

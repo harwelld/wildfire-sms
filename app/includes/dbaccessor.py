@@ -84,7 +84,7 @@ def insertIncidentRecord(incident, useDotEnvFlag=False):
 
 def getAllSmsHistory(useDotEnvFlag=False):
     """Returns all sms history records"""
-    sql = 'SELECT inc_id, cust_id, distance, msg_sid, modified FROM sms_history;'
+    sql = 'SELECT feed_id, cust_id, CAST(distance AS TEXT), msg_sid, modified FROM sms_history;'
     sms_history = executeSQL(sql, None, getDBConnection(useDotEnvFlag), fetchAllFlag=True)
     return sms_history
 
