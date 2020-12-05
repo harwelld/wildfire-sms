@@ -3,6 +3,7 @@ from app import app
 from app.models import RegistrationForm
 from app.includes.dbaccessor import *
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
+from scanFeed import main
 
 
 @app.route("/")
@@ -18,6 +19,7 @@ def home():
         ##if form.validate_on_submit():
 
         customerRecord = request.form.to_dict()
+        customerRecord['phone'] = customerRecord['phone'].replace('-', '')
         registerNewCustomer(customerRecord)
         flash('Registration complete', 'success')
         print(customerRecord)
@@ -39,3 +41,9 @@ def getIncidents():
 @app.route("/getSmsHistory")
 def getSmsHistory():
     return jsonify(getAllSmsHistory())
+
+
+@app.route("/scanFeedMain")
+def scanFeedMain():
+    main()
+    return redirectHome()
