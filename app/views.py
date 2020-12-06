@@ -14,10 +14,7 @@ def redirectHome():
 @app.route("/wildfire-sms", methods=['GET', 'POST'])
 def home():
     form = RegistrationForm(request.form)
-    if request.method == 'POST':
-        # TODO: use wtforms and server-side validation
-        ##if form.validate_on_submit():
-
+    if request.method == 'POST' and form.validate_on_submit():
         customerRecord = request.form.to_dict()
         customerRecord['phone'] = customerRecord['phone'].replace('-', '')
         registerNewCustomer(customerRecord)
@@ -33,8 +30,8 @@ def getCustomers():
     return jsonify(getAllCustomers())
 
 
-@app.route("/getIncidents")
-def getIncidents():
+@app.route("/getIncidentIds")
+def getIncidentIds():
     return jsonify(getAllIncidentIds())
 
 
@@ -43,7 +40,7 @@ def getSmsHistory():
     return jsonify(getAllSmsHistory())
 
 
-@app.route("/scanFeedMain")
-def scanFeedMain():
-    main()
-    return redirectHome()
+# @app.route("/scanFeedMain")
+# def scanFeedMain():
+#     main()
+#     return redirectHome()

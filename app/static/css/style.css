@@ -33,3 +33,7 @@ html {
 .container-map {
     box-sizing: initial;
 }
+
+.validation-error {
+    color: red;
+}
