@@ -6,19 +6,6 @@ from dotenv import load_dotenv
 from app.includes.utils import *
 from app.includes.dbaccessor import *
 
-load_dotenv()
-account_sid = getenv('TWILIO_ACCOUNT_SID')
-auth_token = getenv('TWILIO_AUTH_TOKEN')
-client = Client(account_sid, auth_token)
-
-url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
-incidentsFromFeed = requests.get(url).json()['markers']
-
-logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
-logName = 'scanFeed.log'
-logFile = path.join(logsDir, logName)
-logMessage = f"Scanning feed: {getTime()}"
-logger(logFile, logMessage)
 
 def main():
     """
@@ -31,6 +18,20 @@ def main():
 
     TODO: Include in the Flask server, run on timer in a non-blocking way
     """
+    load_dotenv()
+    account_sid = getenv('TWILIO_ACCOUNT_SID')
+    auth_token = getenv('TWILIO_AUTH_TOKEN')
+    client = Client(account_sid, auth_token)
+
+    url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
+    incidentsFromFeed = requests.get(url).json()['markers']
+
+    logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
+    logName = 'scanFeed.log'
+    logFile = path.join(logsDir, logName)
+    logMessage = f"Scanning feed: {getTime()}"
+    logger(logFile, logMessage)
+    
     # Compare data in feed to incidents in databse and identify new incidents
     newIncidents = findNewIncidents(incidentsFromFeed, getIncidentsIdsFromDB())
 
