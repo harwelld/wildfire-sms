@@ -4,6 +4,44 @@ var autocomplete;
 var infowindow = new google.maps.InfoWindow();
 
 
+const icons = {
+    miles5: {
+        name: '5 miles',
+        url: 'static/img/crimson.svg',
+        scaledSize: new google.maps.Size(35, 35)
+    },
+    miles10: {
+        name: '10 miles',
+        url: 'static/img/orange.svg',
+        scaledSize: new google.maps.Size(35, 35)
+    },
+    miles15: {
+        name: '15 miles',
+        url: 'static/img/green.svg',
+        scaledSize: new google.maps.Size(35, 35)
+    },
+    miles20: {
+        name: '20 miles',
+        url: 'static/img/blue.svg',
+        scaledSize: new google.maps.Size(35, 35)
+    }
+};
+
+function setMapIcon(user_distance) {
+    let icon;
+    if (user_distance === 5) {
+        icon = icons['miles5'];
+    } else if (user_distance === 10) {
+        icon = icons['miles10'];
+    } else if (user_distance === 15) {
+        icon = icons['miles15'];
+    } else {
+        icon = icons['miles20'];
+    }
+    return icon;
+}
+
+
 function initialization() {
     getCustomerData();
     initAutocomplete();
@@ -26,6 +64,18 @@ function mapInitialization(customers) {
         streetViewControl: false
     });
 
+    // Create custom ledgend for user locations
+    const legend = document.getElementById('legend');
+    for (const key in icons) {
+        const type = icons[key];
+        const name = type.name;
+        const icon = type.url;
+        const p = document.createElement('p');
+        p.innerHTML = '<img class="ml-3" src="' + icon + '"> ' + name;
+        legend.appendChild(p);
+    }
+    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+
     // Load latest InciWeb data direct from RSS feed
     var inciWebData = new google.maps.KmlLayer({ url: 'https://inciweb.nwcg.gov/feeds/maps/' });
     inciWebData.setMap(map);
@@ -33,7 +83,7 @@ function mapInitialization(customers) {
     // This fails because of CORS
     // map.data.loadGeoJson('https://inciweb.nwcg.gov/feeds/json/esri/');
     // map.data.setStyle({
-    //     url: 'img/error.svg',
+    //     url: 'static/img/error.svg',
     //     scaledSize: new google.maps.Size(40, 40)
     // });
 
@@ -56,8 +106,8 @@ function mapInitialization(customers) {
         let marker = new google.maps.Marker({ // Set the marker
             position : latlng, // Position marker to coordinates
             map : map, // assign the market to our map variable
-            customInfo: contentStr
-            //icon: 'img/map_marker.png'
+            customInfo: contentStr,
+            icon: setMapIcon(e['user_distance'])
         });
 
         // Add a Click Listener to the marker
@@ -66,7 +116,6 @@ function mapInitialization(customers) {
             infowindow.open(map, marker);
         });
     });
-
     map.fitBounds(bounds);
 }
 

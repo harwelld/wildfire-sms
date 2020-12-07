@@ -37,3 +37,30 @@ html {
 .validation-error {
     color: red;
 }
+
+h6 {
+    text-align: center;
+}
+
+#legend {
+    background-color: #fff;
+    max-width: 120px;
+    border-radius: 2px;
+    box-shadow: 0, 0, 0, 0.3;
+}
+
+#legend img {
+    vertical-align: middle;
+    max-width: 30px;
+    max-height: 30px;
+}
+
+#legend-title {
+    text-align: center;
+    font-size: medium;
+}
+
+#legend-subtitle {
+    text-align: center;
+    font-size: small;
+}
