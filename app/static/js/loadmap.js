@@ -5,14 +5,9 @@ var infowindow = new google.maps.InfoWindow();
 
 
 const icons = {
-    miles5: {
-        name: '5 miles',
-        url: 'static/img/crimson.svg',
-        scaledSize: new google.maps.Size(35, 35)
-    },
-    miles10: {
-        name: '10 miles',
-        url: 'static/img/orange.svg',
+    miles20: {
+        name: '20 miles',
+        url: 'static/img/blue.svg',
         scaledSize: new google.maps.Size(35, 35)
     },
     miles15: {
@@ -20,23 +15,28 @@ const icons = {
         url: 'static/img/green.svg',
         scaledSize: new google.maps.Size(35, 35)
     },
-    miles20: {
-        name: '20 miles',
-        url: 'static/img/blue.svg',
+    miles10: {
+        name: '10 miles',
+        url: 'static/img/orange.svg',
+        scaledSize: new google.maps.Size(35, 35)
+    },
+    miles5: {
+        name: '5 miles',
+        url: 'static/img/crimson.svg',
         scaledSize: new google.maps.Size(35, 35)
     }
 };
 
 function setMapIcon(user_distance) {
     let icon;
-    if (user_distance === 5) {
-        icon = icons['miles5'];
-    } else if (user_distance === 10) {
-        icon = icons['miles10'];
+    if (user_distance === 20) {
+        icon = icons['miles20'];
     } else if (user_distance === 15) {
         icon = icons['miles15'];
+    } else if (user_distance === 10) {
+        icon = icons['miles10'];
     } else {
-        icon = icons['miles20'];
+        icon = icons['miles5'];
     }
     return icon;
 }
