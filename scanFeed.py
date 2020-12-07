@@ -18,20 +18,7 @@ def main():
 
     TODO: Include in the Flask server, run on timer in a non-blocking way
     """
-    load_dotenv()
-    account_sid = getenv('TWILIO_ACCOUNT_SID')
-    auth_token = getenv('TWILIO_AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
 
-    url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
-    incidentsFromFeed = requests.get(url).json()['markers']
-
-    logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
-    logName = 'scanFeed.log'
-    logFile = path.join(logsDir, logName)
-    logMessage = f"Scanning feed: {getTime()}"
-    logger(logFile, logMessage)
-    
     # Compare data in feed to incidents in databse and identify new incidents
     newIncidents = findNewIncidents(incidentsFromFeed, getIncidentsIdsFromDB())
 
@@ -78,6 +65,7 @@ def main():
                         logger(logFile, logMessage)
                         print(logMessage)
                         print(smsResult['exception'])
+                        logger(logFile, smsResult['exception'])
 
                     else:
                         logMessage = f"Notification sent to user: {customer['user_name']}, message sid: {smsResult['msg_sid']}"
@@ -177,4 +165,18 @@ def notifyCustomer(incident, distance, customerPhone):
 
 ###############################################################################
 if __name__ == '__main__':
+    load_dotenv()
+    account_sid = getenv('TWILIO_ACCOUNT_SID')
+    auth_token = getenv('TWILIO_AUTH_TOKEN')
+    client = Client(account_sid, auth_token)
+
+    url = 'https://inciweb.nwcg.gov/feeds/json/esri/'
+    incidentsFromFeed = requests.get(url).json()['markers']
+
+    logsDir = 'C:\\Users\\Dylan\\wildfire-sms\\logs'
+    logName = 'scanFeed.log'
+    logFile = path.join(logsDir, logName)
+    logMessage = f"Scanning feed: {getTime()}"
+    logger(logFile, logMessage)
+    
     main()
