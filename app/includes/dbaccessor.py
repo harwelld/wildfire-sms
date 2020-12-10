@@ -1,4 +1,13 @@
-import json
+# -----------------------------------------------------------------------------
+# Name:        dbaccessor.py
+#
+# Purpose:     Database accessor functions
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 from app.includes.dbutil import getDBConnection, executeSQL
 
 
@@ -101,7 +110,7 @@ def insertSmsHistoryRecord(history, useDotEnvFlag=False):
     executeSQL(sql, params, getDBConnection(useDotEnvFlag))
 
 
-
+###############################################################################
 ###############################################################################
 if __name__ == '__main__':
     pass

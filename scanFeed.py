@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Name:        scanFeed.py
+#
+# Purpose:     Scheduled task to scan InciWeb data feed and send sms to users
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 import json
 import requests
 from os import getenv, path
@@ -146,6 +156,7 @@ def addNewIncidents(newIncidents):
 
 
 def notifyCustomer(incident, distance, customerPhone):
+    """Send a user an SMS text notification"""
     smsResult = {'error': None, 'exception': None}
     try:
         message = client.messages \
@@ -163,6 +174,7 @@ def notifyCustomer(incident, distance, customerPhone):
     return smsResult
 
 
+###############################################################################
 ###############################################################################
 if __name__ == '__main__':
     load_dotenv()

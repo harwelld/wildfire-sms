@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Name:        dbutil.py
+#
+# Purpose:     Database helper functions
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from os import getenv
@@ -6,10 +16,11 @@ from app import app
 
 
 def getDBConnection(useDotEnvFlag=False):
-    """Returns PostgreSQL connection or None if failure to connect"""
+    """
+    Returns PostgreSQL connection or None if failure to connect
+    If using useDotEnvFlag, the calling module must load_dotenv()
+    """
     try:
-        # if useDotEnvFlag:
-        #     load_dotenv(find_dotenv())
         cnxn = psycopg2.connect(
             dbname = getenv('DB_NAME') if useDotEnvFlag else app.config['DB_NAME'],
             user = getenv('DB_USER') if useDotEnvFlag else app.config['DB_USER'],
@@ -25,7 +36,7 @@ def getDBConnection(useDotEnvFlag=False):
 
 
 def executeSQL(sql, params, connection, fetchAllFlag=False):
-    """Executes paramaterized SQL with optional flags for return records"""
+    """Executes paramaterized SQL with optional flag for return records"""
     try:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
         cursor.execute(sql, params)
@@ -40,5 +51,7 @@ def executeSQL(sql, params, connection, fetchAllFlag=False):
         print('PostgreSQL connection closed')
 
 
+###############################################################################
+###############################################################################
 if __name__ == '__main__':
     pass

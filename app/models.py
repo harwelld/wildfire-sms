@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Name:        models.py
+#
+# Purpose:     Registration form model and validation
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 from flask_wtf import FlaskForm
 from app.includes.utils import isFieldUnique
 from wtforms import HiddenField, SubmitField, StringField, SelectField
@@ -5,7 +15,7 @@ from wtforms.validators import *
 
 
 class RegistrationForm(FlaskForm):
-    """Registration form model and validation"""
+    """Registration form model and server-side validation"""
 
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     def validate_username(form, field):
@@ -14,17 +24,23 @@ class RegistrationForm(FlaskForm):
         else:
             raise ValidationError('Username is already in use, please try another.')
 
-    phone = StringField('Phone Number', validators=[DataRequired(), Length(min=12, max=12, message="Phone number has an invalid length.")])
+    phone = StringField('Mobile Phone Number', validators=[DataRequired(), Length(min=12, max=12, message='Phone number has an invalid length.')])
     def validate_phone(form, field):
-        # TODO: regex to validate format ###-###-####
-        if isFieldUnique(field.data, 'user_phone'):
+        # TODO: python regex to validate format ###-###-####
+        # JS input validator disables all keys except numeric, but Shift+numeric chars still work
+        strippedPhone = field.data.replace('-', '')
+        chars = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')']
+        for char in chars:
+            if char in strippedPhone:
+                raise ValidationError('Phone number cannot contain special characters.')
+        if isFieldUnique(strippedPhone, 'user_phone'):
             pass
         else:
             raise ValidationError('Phone number is already in use, please try another.')
 
-    distance = SelectField('Notification Distance', choices=[('5','5 miles'),('10','10 miles'),('15','15 miles'),('20','20 miles')], validators=[DataRequired()])
+    distance = SelectField('Incident Notification Range', choices=[('20','20 miles'),('15','15 miles'),('10','10 miles'),('5','5 miles')], validators=[DataRequired()])
 
-    autocomplete = StringField('Address or nearby location', validators=[DataRequired(message='A valid address or location is required')])
+    autocomplete = StringField('Address or Nearby Location', validators=[DataRequired(message='A valid address or location is required.')])
 
     latitude = HiddenField('Latitude', validators=[DataRequired()])
     def validate_latitude(field, form):
@@ -37,3 +53,9 @@ class RegistrationForm(FlaskForm):
             raise ValidationError(message='Longitude is empty')
 
     submit = SubmitField('Register')
+
+
+###############################################################################
+###############################################################################
+if __name__ == '__main__':
+    pass

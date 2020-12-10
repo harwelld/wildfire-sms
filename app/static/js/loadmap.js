@@ -3,7 +3,6 @@ var place;
 var autocomplete;
 var infowindow = new google.maps.InfoWindow();
 
-
 const icons = {
     miles20: {
         name: '20 miles',
@@ -41,12 +40,10 @@ function setMapIcon(user_distance) {
     return icon;
 }
 
-
 function initialization() {
     getCustomerData();
     initAutocomplete();
 }
-
 
 function mapInitialization(customers) {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -119,7 +116,6 @@ function mapInitialization(customers) {
     map.fitBounds(bounds);
 }
 
-
 // Hit mapCustomer endpoint to retrieve customer data
 function getCustomerData() {
     $.ajax({
@@ -132,7 +128,6 @@ function getCustomerData() {
         }
     });
 }
-
 
 // Center map from autocomplete address field selection
 function initAutocomplete() {
@@ -160,7 +155,6 @@ function initAutocomplete() {
         $('#longitude').val(place.geometry.location.lng());
     });
 }
-
 
 // Initialize when page loads
 google.maps.event.addDomListener(window, 'load', initialization);

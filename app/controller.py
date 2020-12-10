@@ -1,4 +1,13 @@
-import json
+# -----------------------------------------------------------------------------
+# Name:        controller.py
+#
+# Purpose:     Flask server routing and endpoints
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 from app import app
 from app.models import RegistrationForm
 from app.includes.dbaccessor import *
@@ -40,7 +49,7 @@ def getSmsHistory():
     return jsonify(getAllSmsHistory())
 
 
-# @app.route("/scanFeedMain")
-# def scanFeedMain():
-#     main()
-#     return redirectHome()
+###############################################################################
+###############################################################################
+if __name__ == '__main__':
+    pass

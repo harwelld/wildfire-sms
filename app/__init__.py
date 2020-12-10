@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Name:        __init__.py
+#
+# Purpose:     Initialize flask app object and set configuration
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 from flask import Flask
 
 app = Flask(__name__)
@@ -10,4 +20,4 @@ elif app.config['ENV'] == 'testing':
 else:
     app.config.from_object('app_config.DevConfig')
 
-from app import views
+from app import controller

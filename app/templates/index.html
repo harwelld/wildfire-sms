@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Wildfire SMS</title>
+    <title>Wildfire-SMS</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 
     <!-- jQuery, Bootstrap and JS bundle w/ Popper.js -->
@@ -18,89 +18,104 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <!-- Global var for app path -->
-    <script type=text/javascript>
-        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    </script>
+    <script type=text/javascript>$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};</script>
 </head>
 <body>
-<div class="container-fluid">
-<!-- Page Container -->
-<div class="row">
-    <div class="col-4">
-        <!-- Header Container -->
-        <nav class="navbar navbar-dark bg-dark">
-            <span class="navbar-brand mb-0 h1">Wildfire SMS Notification System</span>
-        </nav>
-        <!-- Sign Up Form -->
-        <form id="signup_form" method="POST" action="{{ url_for('home') }}">
-            <div class="form-group mx-4 my-3">
-                {{ form.csrf_token }}
-                {{ form.username.label }}
-                {{ form.username(class_="form-control") }}
-                {% if form.username.errors %}
-                    {% for error in form.username.errors %}
-                        <small class="validation-error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
+    <div class="container-fluid">
+        <!-- Page Container -->
+        <div class="row">
+            <div class="col-4">
+                <!-- Header Container -->
+                <nav class="navbar navbar-dark bg-dark">
+                    <span class="navbar-brand mb-0 h1">Wildfire SMS Notification Service</span>
+                </nav>
+                <div class="m-4">
+                    <p>
+                        Would you like to be notified when there is a new fire incident in your area?
+                    </p>
+                    <p>
+                        This is a free opt-in service that scans the <a href="https://inciweb.nwcg.gov/" target="_blank">InciWeb</a> data feed every 15 minutes.
+                        As new fire incidents occur, this system will notify users if the incident is within their specified notification range via a text message to their mobile phone.
+                    </p>
+                    <p>
+                        The only personal information required to register is a valid mobile phone number which will not be displayed to other users.
+                        The address you register with does not need to be your exact home address, just a nearby location.
+                    </p>
+                    <p>
+                        If you would like to register for this service, please use the registration form below:
+                    </p>
+                </div>
+                <!-- Sign Up Form -->
+                <form id="signup_form" method="POST" action="{{ url_for('home') }}">
+                    <div class="form-group mx-4 my-3">
+                        {{ form.csrf_token }}
+                        {{ form.username.label }}
+                        {{ form.username(class_="form-control") }}
+                        {% if form.username.errors %}
+                            {% for error in form.username.errors %}
+                                <small class="validation-error">{{ error }}</small>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="form-group mx-4 my-3">
+                        {{ form.phone.label }}
+                        {{ form.phone(class_="form-control phoneNumber") }}
+                        {% if form.phone.errors %}
+                            {% for error in form.phone.errors %}
+                                <small class="validation-error">{{ error }}</small>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="form-group mx-4 my-3">
+                        {{ form.distance.label }}
+                        {{ form.distance(class_="form-control") }}
+                        {% if form.distance.errors %}
+                            {% for error in form.distance.errors %}
+                                <small class="validation-error">{{ error }}</small>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="form-group mx-4 my-3">
+                        {{ form.autocomplete.label }}
+                        {{ form.autocomplete(class_="form-control") }}
+                        {% if form.autocomplete.errors %}
+                            {% for error in form.autocomplete.errors %}
+                                <small class="validation-error">{{ error }}</small>
+                            {% endfor %}
+                        {% endif %}
+                        {{ form.latitude }}
+                        {{ form.longitude }}
+                        {% if form.longitude.errors or form.latitude.errors %}
+                            <small class="validation-error">Invalid address or location, please try again.</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group text-center m-2">
+                        {{ form.submit(class_="btn btn-primary") }}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <label class="{{ category }}">{{ message }}</label>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </form>
             </div>
-            <div class="form-group mx-4 my-3">
-                {{ form.phone.label }}
-                {{ form.phone(class_="form-control phoneNumber") }}
-                {% if form.phone.errors %}
-                    {% for error in form.phone.errors %}
-                        <small class="validation-error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
+
+            <!-- Map Container -->
+            <div id="map" class="col-8"></div>
+            <!-- Legend Container-->
+            <div id="legend" class="ml-2 mb-2">
+                <div id="legend-title" class="m-2">User Location</div>
+                <div id="legend-subtitle" class="mb-3">SMS Range</div>
             </div>
-            <div class="form-group mx-4 my-3">
-                {{ form.distance.label }}
-                {{ form.distance(class_="form-control") }}
-                {% if form.distance.errors %}
-                    {% for error in form.distance.errors %}
-                        <small class="validation-error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
-            </div>
-            <div class="form-group mx-4 my-3">
-                {{ form.autocomplete.label }}
-                {{ form.autocomplete(class_="form-control") }}
-                {% if form.autocomplete.errors %}
-                    {% for error in form.autocomplete.errors %}
-                        <small class="validation-error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
-                {{ form.latitude }}
-                {{ form.longitude }}
-                {% if form.longitude.errors or form.latitude.errors %}
-                    <small class="validation-error">Invalid address or location, please try again.</small>
-                {% endif %}
-            </div>
-            <div class="form-group text-center m-2">
-                {{ form.submit(class_="btn btn-primary") }}
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <label class="{{ category }}">{{ message }}</label>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </form>
+
+        </div>
     </div>
 
-    <!-- Map Container -->
-    <div id="map" class="col-8"></div>
-    <!-- Legend Container-->
-    <div id="legend" class="ml-2 mb-2">
-        <div id="legend-title" class="m-2">User Location</div>
-        <div id="legend-subtitle" class="mb-3">SMS Range</div>
-    </div>
+    <!-- Load custom JS -->
+    <script src="{{ url_for('static', filename='js/loadmap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/phonenumber.js') }}"></script>
 
-</div>
-</div>
-
-<!-- Load custom JS -->
-<script src="{{ url_for('static', filename='js/loadmap.js') }}"></script>
-<script src="{{ url_for('static', filename='js/phonenumber.js') }}"></script>
 </body>
 </html>

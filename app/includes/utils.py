@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------
+# Name:        utils.py
+#
+# Purpose:     Helper functions
+#
+# Author:      Dylan Harwell - UW Madison
+#
+# Created:     12/01/2020
+# -----------------------------------------------------------------------------
+
 import time
 from app.includes.dbaccessor import getAllCustomers
 
@@ -20,3 +30,9 @@ def isFieldUnique(value, fieldName):
         return True
     else:
         return False
+
+
+###############################################################################
+###############################################################################
+if __name__ == '__main__':
+    pass
