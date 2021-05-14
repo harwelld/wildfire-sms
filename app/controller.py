@@ -12,7 +12,6 @@ from app import app
 from app.models import RegistrationForm
 from app.includes.dbaccessor import *
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
-from scanFeed import main
 
 
 @app.route("/")
